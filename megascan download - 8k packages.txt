@@ -1,0 +1,74 @@
+(async () => {
+  const retryDelay = 10000; // Retry delay for failed downloads (10 seconds)
+  const checkInterval = 5000; // Check for new assets every 5 seconds
+  const maxDownloads = parseInt(prompt("Enter the number of files to download:", "18871"), 10); // Max downloads to perform
+  const itemDelay = 3000; // Delay between each item to prevent rate limit lockouts (3 seconds)
+
+  // Function to click the download button in the popover
+  const clickDownloadButton = async (assetId, fileName) => {
+    let downloadSuccessful = false;
+
+    while (!downloadSuccessful) {
+      try {
+        // Click the asset link to open the popover
+        const assetLink = document.querySelector(`a[href*="assetId=${assetId}"]`);
+        if (!assetLink) {
+          throw new Error(`Asset link not found for (${assetId}) ${fileName}`);
+        }
+        assetLink.click();
+
+        // Wait for the popover to appear and click the download button
+        await new Promise(resolve => setTimeout(resolve, 2000)); // Adjust delay as necessary
+        const downloadButton = document.querySelector('button.Button___1mkoh.Button--fullWidth___2subI');
+        if (!downloadButton) {
+          throw new Error(`Download button not found for (${assetId}) ${fileName}`);
+        }
+        downloadButton.click();
+
+        console.log(`Downloaded: (${assetId}) ${fileName}`);
+        downloadSuccessful = true;
+
+        // Click off the popup to close it
+        document.body.click();
+        await new Promise(resolve => setTimeout(resolve, 500)); // Wait for popup to close
+
+      } catch (error) {
+        console.error(`Error downloading (${assetId}) ${fileName}: ${error.message}`);
+        console.log(`Retrying download of (${assetId}) ${fileName}...`);
+        await new Promise(resolve => setTimeout(resolve, retryDelay));
+      }
+    }
+  };
+
+  // Function to find new asset IDs on the page and get filenames
+  const findNewAssets = () => {
+    return Array.from(document.querySelectorAll('a[href*="assetId"]'))
+      .map(a => {
+        const assetId = a.href.match(/assetId=([^&]+)/)[1];
+        const fileName = a.querySelector('div.showOnHover > span').textContent;
+        return { assetId, fileName, href: a.href };
+      });
+  };
+
+  let totalDownloads = 0;
+
+  // Main function to handle continuous downloading
+  const startDownloading = async () => {
+    const assets = findNewAssets();
+
+    for (const { assetId, fileName } of assets) {
+      if (totalDownloads >= maxDownloads) break; // Check maxDownloads before starting new download
+
+      await clickDownloadButton(assetId, fileName);
+      totalDownloads++;
+      console.log(`Total downloads: ${totalDownloads} of ${maxDownloads}`);
+
+      // Delay between each item to prevent rate limit lockouts
+      await new Promise(resolve => setTimeout(resolve, itemDelay));
+    }
+
+    console.log(`Download complete! Total of ${totalDownloads} assets downloaded.`);
+  };
+
+  startDownloading();
+})();
