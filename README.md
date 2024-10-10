@@ -48,5 +48,4 @@
 
 ## **Script**
 
-
-  [BulkDownloadQuixel.txt](https://github.com/user-attachments/files/17263692/BulkDownloadQuixel.txt)
+[megascan download - 8k packages](https://github.com/chimerawd/Quixel-Bulk-Downloads/blob/a8359b8207f350c54faf8df78ce31c2ef33a02b0/megascan%20download%20-%208k%20packages.txt)
